@@ -1,7 +1,10 @@
 using System.Text;
+using System.Text.Json;
 using System.Threading.Channels;
+using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using ShippingModels;
 
 namespace Shipping;
 
@@ -11,10 +14,13 @@ public class Worker : IHostedService
     private readonly IConnection _connection;
     private IChannel _channel;
 
-    public Worker(ILogger<Worker> logger, IConnection connection)
+	private readonly IServiceScopeFactory _scopeFactory; 
+
+    public Worker(ILogger<Worker> logger, IConnection connection, IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
         _connection = connection;
+		_scopeFactory = scopeFactory;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -36,9 +42,22 @@ public class Worker : IHostedService
 		{
 			var body = ea.Body.ToArray();
 			var message = Encoding.UTF8.GetString(body);
+
 			_logger.LogInformation("Received order: {Message}", message);
 
-			await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
+			OrderModel orderModel = JsonSerializer.Deserialize<OrderModel>(message);
+
+			using var scope = _scopeFactory.CreateScope();
+			var _context = scope.ServiceProvider.GetRequiredService<OrderContext>();
+
+			_context.Orders.Add(orderModel);
+			await _context.SaveChangesAsync();
+			_logger.LogInformation("Saved in memory - Done");
+
+			await _channel.BasicAckAsync(
+				ea.DeliveryTag, 
+				multiple: false
+			);
 		};
 
 		await _channel.BasicConsumeAsync(

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Order.Api.Models;
 using RabbitMQ.Client;
+using ShippingModels;
 
 namespace Order.Api.Controllers
 {

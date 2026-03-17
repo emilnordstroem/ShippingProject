@@ -4,6 +4,7 @@
   </Folder>
   <Project Path="Order.Api/Order.Api.csproj" />
   <Project Path="Shipping/Shipping.csproj" />
+  <Project Path="ShippingModels/ShippingModels.csproj" Id="d824f691-a02a-498b-bed7-f1fe27140be0" />
   <Project Path="SystemIntegration09.AppHost/AppHost.csproj" />
   <Project Path="SystemIntegration09.ServiceDefaults/ServiceDefaults.csproj" />
 </Solution>

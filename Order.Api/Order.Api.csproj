@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ShippingModels\ShippingModels.csproj" />
     <ProjectReference Include="..\SystemIntegration09.ServiceDefaults\ServiceDefaults.csproj" />
   </ItemGroup>
 

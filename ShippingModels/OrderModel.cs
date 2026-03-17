@@ -1,4 +1,4 @@
-﻿namespace Order.Api.Models
+﻿namespace ShippingModels
 {
 	public class OrderModel
 	{
@@ -8,8 +8,8 @@
 		public string[] Items { get; set; }
 		public double Amount { get; set; }
 
-		public OrderModel() 
-		{ 
+		public OrderModel()
+		{
 		}
 	}
 }
