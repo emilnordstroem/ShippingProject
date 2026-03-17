@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Order.Api.Models;
+using RabbitMQ.Client;
 
 namespace Order.Api.Controllers
 {
@@ -14,10 +17,12 @@ namespace Order.Api.Controllers
     public class OrderModelsController : ControllerBase
     {
         private readonly OrderContext _context;
+        private readonly IConnection _connection;
 
-        public OrderModelsController(OrderContext context)
+        public OrderModelsController(OrderContext context, IConnection connection)
         {
             _context = context;
+            _connection = connection;
         }
 
         [HttpGet]
@@ -39,42 +44,33 @@ namespace Order.Api.Controllers
             return orderModel;
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutOrderModel(int id, OrderModel orderModel)
-        {
-            if (id != orderModel.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(orderModel).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!OrderModelExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
         [HttpPost]
         public async Task<ActionResult<OrderModel>> PostOrderModel(OrderModel orderModel)
         {
             _context.Orders.Add(orderModel);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetOrderModel", new { id = orderModel.Id }, orderModel);
+			await using IChannel channel = await _connection.CreateChannelAsync();
+
+			await channel.QueueDeclareAsync(
+				queue: "orders",
+				durable: true,
+				exclusive: false,
+				autoDelete: false,
+				arguments: null
+			);
+
+			var message = JsonSerializer.Serialize(orderModel);
+			var body = Encoding.UTF8.GetBytes(message);
+
+			await channel.BasicPublishAsync(
+				exchange: string.Empty,
+				routingKey: "orders",
+				body: body
+			);
+
+
+			return CreatedAtAction("GetOrderModel", new { id = orderModel.Id }, orderModel);
         }
 
         [HttpDelete("{id}")]
@@ -90,11 +86,6 @@ namespace Order.Api.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool OrderModelExists(int id)
-        {
-            return _context.Orders.Any(e => e.Id == id);
         }
     }
 }
