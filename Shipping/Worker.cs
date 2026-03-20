@@ -30,7 +30,7 @@ public class Worker : IHostedService
         _channel = await _connection.CreateChannelAsync();
 
 		await _channel.QueueDeclareAsync(
-		   queue: "orders",
+		   queue: "shipping_queue",
 		   durable: true,
 		   exclusive: false,
 		   autoDelete: false,
@@ -61,7 +61,7 @@ public class Worker : IHostedService
 		};
 
 		await _channel.BasicConsumeAsync(
-			queue: "orders",
+			queue: "shipping_queue",
 			autoAck: false,
 			consumer: consumer
 		);

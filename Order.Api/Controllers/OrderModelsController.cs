@@ -54,7 +54,7 @@ namespace Order.Api.Controllers
 			await using IChannel channel = await _connection.CreateChannelAsync();
 
 			await channel.QueueDeclareAsync(
-				queue: "orders",
+				queue: "shipping_queue",
 				durable: true,
 				exclusive: false,
 				autoDelete: false,
@@ -66,7 +66,7 @@ namespace Order.Api.Controllers
 
 			await channel.BasicPublishAsync(
 				exchange: string.Empty,
-				routingKey: "orders",
+				routingKey: "shipping_queue",
 				body: body
 			);
 
