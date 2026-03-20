@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using Order.Api.Models;
 using Scalar.AspNetCore;
@@ -16,6 +15,7 @@ public class Program
 		builder.Services.AddDbContext<OrderContext>(opt =>
 		    opt.UseInMemoryDatabase("OrderList")
 		);
+		builder.Services.AddHostedService<OutboxWorker>();
 
 		builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -35,7 +35,6 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
-
 
         app.MapControllers();
 

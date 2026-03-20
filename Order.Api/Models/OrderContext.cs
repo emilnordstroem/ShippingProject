@@ -10,5 +10,6 @@ namespace Order.Api.Models
 		{
 		}
 		public DbSet<OrderModel> Orders { get; set; } = default!;
+		public DbSet<OutboxMessage> Outbox { get; set; } = default!;
 	}
 }

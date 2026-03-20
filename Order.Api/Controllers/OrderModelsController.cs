@@ -18,12 +18,10 @@ namespace Order.Api.Controllers
     public class OrderModelsController : ControllerBase
     {
         private readonly OrderContext _context;
-        private readonly IConnection _connection;
 
-        public OrderModelsController(OrderContext context, IConnection connection)
+        public OrderModelsController(OrderContext context)
         {
             _context = context;
-            _connection = connection;
         }
 
         [HttpGet]
@@ -49,27 +47,12 @@ namespace Order.Api.Controllers
         public async Task<ActionResult<OrderModel>> PostOrderModel(OrderModel orderModel)
         {
             _context.Orders.Add(orderModel);
+            _context.Outbox.Add(new OutboxMessage
+            {
+                Type = "Post",
+                Payload = JsonSerializer.Serialize<OrderModel>(orderModel)
+            });
             await _context.SaveChangesAsync();
-
-			await using IChannel channel = await _connection.CreateChannelAsync();
-
-			await channel.QueueDeclareAsync(
-				queue: "shipping_queue",
-				durable: true,
-				exclusive: false,
-				autoDelete: false,
-				arguments: null
-			);
-
-			var message = JsonSerializer.Serialize(orderModel);
-			var body = Encoding.UTF8.GetBytes(message);
-
-			await channel.BasicPublishAsync(
-				exchange: string.Empty,
-				routingKey: "shipping_queue",
-				body: body
-			);
-
 
 			return CreatedAtAction("GetOrderModel", new { id = orderModel.Id }, orderModel);
         }
