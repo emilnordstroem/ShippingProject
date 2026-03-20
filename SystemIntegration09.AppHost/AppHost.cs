@@ -13,4 +13,6 @@ builder.AddProject<Projects.Shipping>("shipping")
     .WithReference(rabbitmq)
     .WaitFor(rabbitmq);
 
+builder.AddProject<Projects.Shipping_API>("shipping-api");
+
 builder.Build().Run();

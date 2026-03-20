@@ -4,9 +4,10 @@ using System.Threading.Channels;
 using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Shipping.Models;
 using ShippingModels;
 
-namespace Shipping;
+namespace Shipping.Services;
 
 public class Worker : IHostedService
 {
@@ -48,7 +49,7 @@ public class Worker : IHostedService
 			OrderModel orderModel = JsonSerializer.Deserialize<OrderModel>(message);
 
 			using var scope = _scopeFactory.CreateScope();
-			var _context = scope.ServiceProvider.GetRequiredService<OrderContext>();
+			var _context = scope.ServiceProvider.GetRequiredService<ShippingContext>();
 
 			_context.Orders.Add(orderModel);
 			await _context.SaveChangesAsync();
@@ -69,7 +70,7 @@ public class Worker : IHostedService
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Worker stopped.");
+		_logger.LogInformation("Worker stopped.");
 
 		if (_channel is not null)
 		{
